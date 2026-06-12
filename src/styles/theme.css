@@ -1,0 +1,51 @@
+/* FoxCNV design tokens — minimalist, fluid glassmorphism. */
+:root {
+  /* Brand accent */
+  --accent: #e07436;
+  --accent-strong: #f0853f;
+  --accent-deep: #c75f27;
+  --accent-soft: rgba(224, 116, 54, 0.16);
+  --accent-ring: rgba(224, 116, 54, 0.55);
+
+  /* Glass surfaces (dark-leaning, layered over the native backdrop) */
+  --glass-bg: rgba(30, 30, 36, 0.55);
+  --glass-bg-strong: rgba(36, 36, 44, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-border-strong: rgba(255, 255, 255, 0.20);
+  --glass-shadow: 0 12px 48px rgba(0, 0, 0, 0.38);
+  --glass-blur: 22px;
+
+  /* Text */
+  --text: rgba(255, 255, 255, 0.92);
+  --text-dim: rgba(255, 255, 255, 0.62);
+  --text-faint: rgba(255, 255, 255, 0.40);
+
+  /* Radii */
+  --r-lg: 20px;
+  --r-md: 12px;
+  --r-sm: 8px;
+
+  /* Motion */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur: 240ms;
+
+  /* Chrome */
+  --titlebar-h: 40px;
+
+  /* App background: subtle accent glow + dark base.
+     The dark base doubles as the fallback when transparency is unavailable
+     (browser preview, Remote Desktop, "reduce transparency"). */
+  --app-bg:
+    radial-gradient(1100px 560px at 12% -12%, rgba(224, 116, 54, 0.14), transparent 58%),
+    radial-gradient(820px 480px at 112% 118%, rgba(224, 116, 54, 0.10), transparent 55%),
+    linear-gradient(165deg, #16161c 0%, #0f0f13 100%);
+}
+
+/* Inside Tauri the OS draws the mica/acrylic blur, so drop the opaque base
+   and keep only the translucent accent glow on top of it. */
+:root.is-tauri {
+  --app-bg:
+    radial-gradient(1100px 560px at 12% -12%, rgba(224, 116, 54, 0.16), transparent 58%),
+    radial-gradient(820px 480px at 112% 118%, rgba(224, 116, 54, 0.12), transparent 55%),
+    transparent;
+}
