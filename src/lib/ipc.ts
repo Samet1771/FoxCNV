@@ -12,6 +12,16 @@ export function isTauri(): boolean {
   return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 }
 
+/** Metadata for a loaded file (mirrors the Rust `FileInfo`). */
+export interface FileInfo {
+  path: string;
+  name: string;
+  ext: string;
+  size: number;
+}
+
+// --- Window controls (custom titlebar) -------------------------------------
+
 interface AppWindow {
   minimize(): Promise<void>;
   toggleMaximize(): Promise<void>;
@@ -46,3 +56,69 @@ export const windowControls = {
     await (await currentWindow())?.close();
   },
 };
+
+// --- File intake -----------------------------------------------------------
+
+/** Pull any file the app was launched with (context-menu / CLI). Once only. */
+export async function takeInitialFile(): Promise<string | null> {
+  if (!isTauri()) return null;
+  const { invoke } = await import("@tauri-apps/api/core");
+  return (await invoke<string | null>("take_initial_file")) ?? null;
+}
+
+/** Inspect a file path on disk. Returns null in browser preview. */
+export async function probeFile(path: string): Promise<FileInfo | null> {
+  if (!isTauri()) return null;
+  const { invoke } = await import("@tauri-apps/api/core");
+  try {
+    return await invoke<FileInfo>("probe_file", { path });
+  } catch {
+    return null;
+  }
+}
+
+/** Fires when a running instance is asked to open another file (2nd launch). */
+export async function onOpenFile(cb: (path: string) => void): Promise<() => void> {
+  if (!isTauri()) return () => {};
+  const { listen } = await import("@tauri-apps/api/event");
+  return listen<string>("open-file", (e) => cb(e.payload));
+}
+
+interface DragDropHandlers {
+  onHover?: () => void;
+  onCancel?: () => void;
+  onDrop?: (paths: string[]) => void;
+}
+
+/** Native OS file drag-and-drop (real paths). No-op in browser preview. */
+export async function onDragDrop(handlers: DragDropHandlers): Promise<() => void> {
+  if (!isTauri()) return () => {};
+  const { getCurrentWebview } = await import("@tauri-apps/api/webview");
+  return getCurrentWebview().onDragDropEvent((e) => {
+    switch (e.payload.type) {
+      case "enter":
+      case "over":
+        handlers.onHover?.();
+        break;
+      case "leave":
+        handlers.onCancel?.();
+        break;
+      case "drop":
+        handlers.onDrop?.(e.payload.paths);
+        break;
+    }
+  });
+}
+
+// --- Formatting helpers ----------------------------------------------------
+
+export function fileName(path: string): string {
+  return path.split(/[\\/]/).pop() || path;
+}
+
+export function formatBytes(n: number): string {
+  if (!n) return "0 B";
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  const i = Math.floor(Math.log(n) / Math.log(1024));
+  return `${(n / Math.pow(1024, i)).toFixed(i ? 1 : 0)} ${units[i]}`;
+}

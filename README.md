@@ -2,14 +2,18 @@
 
 A fast, **local**, **private** file converter for Windows.
 
-Everything runs on your machine. **No network calls, no telemetry, no data
-collection.** Images and documents are converted with pure-Rust libraries; audio
-and video use a bundled, offline FFmpeg invoked locally with fixed, sanitized
-arguments.
+Everything runs on your machine. **No telemetry, no data collection, and no
+network calls in normal use.** Conversions use the most permissively-licensed
+engine available for each format: images and documents (and many audio/video
+codecs like AV1, VP9, Opus, FLAC) are handled by pure-Rust libraries; for the
+few formats with no pure-Rust encoder (e.g. MP3, H.264/MP4), a bundled,
+offline, **LGPL-only** FFmpeg is invoked locally as a separate process with
+fixed, sanitized arguments.
 
-> **Status:** early development. Milestone **M0** (app shell) is in place — a
-> frameless glassmorphism window with a custom titlebar. File intake and the
-> conversions follow in later milestones.
+> **Status:** early development. **M0** (glassmorphism app shell) and **M1**
+> (file intake — drag-and-drop, single-instance, and the right-click *"Convert
+> with FoxCNV"* menu, plus the 1-click installer config) are in place. The
+> conversions themselves follow in later milestones.
 
 ## Tech
 
@@ -46,6 +50,11 @@ npm run dev
 npm run tauri build    # produces an NSIS installer under src-tauri/target/release/bundle
 ```
 
+The installer is configured for a **1-click, per-user install** (`currentUser`
+mode — no admin/UAC prompt) and embeds the WebView2 offline runtime so first run
+never needs internet. It registers the classic right-click **"Convert with
+FoxCNV"** menu under `HKCU` (no admin), and cleanly removes it on uninstall.
+
 ## App icon
 
 The icon set in `src-tauri/icons/` is generated from `app-icon.svg`. To
@@ -60,13 +69,17 @@ npm un sharp
 
 ## Privacy & security
 
-- Zero networking, zero telemetry, no auto-updater.
+- No telemetry, no auto-updater, no network calls in normal use.
 - Strict Content-Security-Policy; the frontend has **no** filesystem, shell, or
   network capabilities — all I/O happens in Rust.
-- The bundled FFmpeg (added later) is pinned, checksum-verified, and invoked
-  without a shell (arguments passed as a list) to prevent injection.
+- File paths from the right-click menu / CLI are validated and canonicalized.
+- The bundled FFmpeg (added later) is an **LGPL-only** build, pinned,
+  checksum-verified, kept user-replaceable, and invoked without a shell
+  (arguments passed as a list) to prevent injection. Its license texts live in
+  [`THIRD-PARTY-LICENSES/`](./THIRD-PARTY-LICENSES).
 
 ## License
 
 Proprietary — **All Rights Reserved**. Download and personal use only; no
-redistribution and no modification. See [`LICENSE`](./LICENSE).
+redistribution and no modification. See [`LICENSE`](./LICENSE). Third-party
+component licenses are in [`THIRD-PARTY-LICENSES/`](./THIRD-PARTY-LICENSES).
